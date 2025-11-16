@@ -21,27 +21,29 @@
 </div>
 
 <ul id="playlist"></ul>
-const playlist = [
-  { name: "敬拜诗歌：主啊我来到你面前", file: "song1.mp3" },
-  { name: "安静在主面前", file: "song2.mp3" },
-  { name: "你是我的力量", file: "song3.mp3" }
-];
 
 <script>
 const owner = "yasa706";
 const repo  = "m-zik";
 const branch = "main";
 
-const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/?ref=${branch}`;
+// 自定义显示名称映射
+const trackNames = {
+  "song1.mp3": "敬拜诗歌：主啊我来到你面前",
+  "song2.mp3": "安静在主面前",
+  "song3.mp3": "你是我的力量"
+};
 
 async function loadTracks() {
+  const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/?ref=${branch}`;
   const res = await fetch(apiURL);
   const data = await res.json();
 
+  // 筛选 mp3 文件
   const mp3Files = data.filter(item => item.name.endsWith(".mp3"));
 
   return mp3Files.map(file => ({
-    title: file.name.replace(".mp3", ""),
+    title: trackNames[file.name] || file.name.replace(".mp3", ""),
     url: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${file.name}`
   }));
 }
@@ -71,12 +73,13 @@ async function initPlayer() {
     audio.play();
   }
 
+  // 自动播放下一首
   audio.onended = () => {
     current = (current + 1) % tracks.length;
     playTrack(current);
   };
 
-  playTrack(0);
+  playTrack(0); // 自动播放第一首
 }
 
 initPlayer();
