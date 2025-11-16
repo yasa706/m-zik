@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GitHub Auto Music Player</title>
+<style>
+  body{background:#0f172a;color:white;font-family:Arial;text-align:center;padding:40px;}
+  #player{width:100%;max-width:400px;margin:auto;}
+  audio{width:100%;}
+  ul{list-style:none;padding:0;margin-top:20px;}
+  li{padding:8px;cursor:pointer;border-bottom:1px solid #334155;}
+  li:hover{background:#1e293b;}
+</style>
+</head>
+<body>
+
+<h2>🎵 GitHub 自动音乐播放器</h2>
+<div id="player">
+  <audio id="audio" controls></audio>
+</div>
+
+<ul id="playlist"></ul>
+
+<script>
+const owner = "yasa706";
+const repo  = "m-zik";
+const branch = "main";
+
+const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/?ref=${branch}`;
+
+async function loadTracks() {
+  const res = await fetch(apiURL);
+  const data = await res.json();
+
+  const mp3Files = data.filter(item => item.name.endsWith(".mp3"));
+
+  return mp3Files.map(file => ({
+    title: file.name.replace(".mp3", ""),
+    url: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${file.name}`
+  }));
+}
+
+async function initPlayer() {
+  const tracks = await loadTracks();
+  const audio = document.getElementById("audio");
+  const playlist = document.getElementById("playlist");
+
+  if (tracks.length === 0) {
+    playlist.innerHTML = "<li>仓库中没有 mp3 文件</li>";
+    return;
+  }
+
+  tracks.forEach((track, i) => {
+    const li = document.createElement("li");
+    li.textContent = track.title;
+    li.onclick = () => playTrack(i);
+    playlist.appendChild(li);
+  });
+
+  let current = 0;
+
+  function playTrack(index){
+    current = index;
+    audio.src = tracks[index].url;
+    audio.play();
+  }
+
+  audio.onended = () => {
+    current = (current + 1) % tracks.length;
+    playTrack(current);
+  };
+
+  playTrack(0);
+}
+
+initPlayer();
+</script>
+
+</body>
+</html>
